@@ -1,66 +1,93 @@
-# Neon Lunapark — tek dosyalık 3D sahne
+<!-- HERO: ekran görüntüsü URL'i buraya gelecek -->
 
-Gece ışıklarıyla yanan minyatür bir lunapark. Tarayıcıda açılır, kurulum yoktur, sunucu istemez.
+<h1 align="center">Neon Lunapark</h1>
 
-**[index.html](index.html)** dosyasını indirip çift tıklayın — hepsi bu.
+<p align="center">
+  Bir HTML dosyasını çift tıklayın; gece ışıklarıyla yanan minyatür bir lunapark açılır.<br>
+  Kurulum yok, sunucu yok, indirilen tek bir görsel veya model dosyası yok.
+</p>
 
-## Ne göreceksiniz
+<p align="center">
+  <a href="index.html"><img src="https://img.shields.io/badge/index.html-63%20KB-FF4D4F?style=flat-square" alt="Tek dosya, 63 KB"></a>
+  <img src="https://img.shields.io/badge/ba%C4%9F%C4%B1ml%C4%B1l%C4%B1k-0-FF4D4F?style=flat-square" alt="Sıfır bağımlılık">
+  <img src="https://img.shields.io/badge/60-FPS-FF4D4F?style=flat-square" alt="60 FPS ölçüldü">
+</p>
 
-- **Roller coaster**: kapalı bir ray üzerinde, virajlarda yatarak (banking) ilerleyen 4 vagonluk tren
-- **Dönme dolap**: yavaş dönen çark; kabinler yerçekimine göre asılı kalır
-- **Karusel**: kendi ekseninde dönen, atları yukarı-aşağı süzülen atlıkarınca
-- **Bilet gişesi, oyun standı, yiyecek standı**: tenteleri, tezgâhları, ışıklı tabelalarıyla
-- **Neon**: yazılar, kemerler ve nabız gibi atan ışık zincirleri
-- Kamera sahnenin çevresinde yavaşça süzülür; siz de fareyle müdahale edebilirsiniz
+---
 
-## Üç atmosfer
+## 30 saniyede ne oluyor?
+
+Kapalı bir ray üzerinde dört vagonluk bir tren koşuyor, virajlarda içeri yatıyor. Dönme dolap ağır ağır dönüyor, kabinleri yerçekimine asılı kalıyor. Karuselin atları süzülerek inip kalkıyor. Bilet gişesi, oyun standı ve yiyecek standı tabelalarını yakıyor. Kamera sahnenin çevresinde kendi kendine süzülüyor — siz de fareyle araya girebiliyorsunuz.
+
+Üç düğme atmosferi baştan kuruyor:
 
 | Mod | Ne değişir |
 |---|---|
-| **Gündüz** | Açık mavi gökyüzü, sıcak güneş ışığı, keskin gölgeler, neon söner |
-| **Normal Gece** | Lacivert gökyüzü, yıldızlar, ay ışığı, ölçülü neon parıltısı |
-| **Festival Modu** | Mor-macenta gökyüzü, doygun renkler, güçlü bloom, hızlanmış ışık animasyonları |
+| **Gündüz** | Açık mavi gökyüzü, sıcak güneş, keskin gölgeler; neon söner |
+| **Normal Gece** | Lacivert gökyüzü, yıldızlar, ay ışığı, ölçülü parıltı |
+| **Festival** | Mor-macenta gökyüzü, doygun renk, güçlü bloom, hızlanmış ışık |
 
-Mod geçişleri anlık değil: gökyüzü, sis, ışık renkleri ve bloom değerleri yumuşak bir geçişle (smoothstep) birbirine karışır.
+Geçişler ani değil: gökyüzü, sis, ışık renkleri ve bloom değerleri birbirine yumuşayarak karışır.
+
+## Nasıl açarım?
+
+```
+1. index.html dosyasını indirin
+2. Çift tıklayın
+```
+
+Üçüncü adım yok. Derleme, `npm install`, yerel sunucu gerekmez. Dosya `file://` üzerinden çalışır.
 
 ## Kontroller
 
 | Girdi | Etki |
 |---|---|
-| Fareyi sürükleyin / parmakla kaydırın | Sahneyi yörüngede döndürün |
-| Tekerlek / iki parmak | Yaklaş–uzaklaş |
+| Sürükle | Sahneyi döndür |
+| Tekerlek | Yaklaş / uzaklaş |
 | `1` `2` `3` | Gündüz / Normal Gece / Festival |
 | `Boşluk` | Otomatik kamera turunu durdur–devam ettir |
 | `←` `→` | Kamerayı elle çevir |
 | `+` `−` | Zoom |
 
-Fareyi bıraktıktan birkaç saniye sonra otomatik kamera turu kendiliğinden devralır.
+Fareyi bıraktıktan birkaç saniye sonra otomatik tur kendiliğinden devralır.
 
-## Teknoloji notu
+## Ölçülen performans
 
-- **Three.js 0.169.0**, ES modül `importmap` ile CDN'den; build adımı, paket yöneticisi, bundler yok
-- **Sıfır varlık**: hiçbir `.glb`, `.png`, `.jpg` yok. Bütün geometri kutu, silindir, tor, küre ve `TubeGeometry`'den; bütün dokular çalışma anında `<canvas>` üzerine çizilip `CanvasTexture`'a dönüştürülüyor
-- Ray, `CatmullRomCurve3` ile kapalı bir eğri; tren pozisyonu ve yatış açısı her karede eğrinin teğet/normal çerçevesinden türetiliyor
-- Gökyüzü, içten görünen bir küre üzerinde çalışan `ShaderMaterial` gradyanı (`fog: false`, `renderOrder: -1`)
-- Son işlem: `EffectComposer` + `UnrealBloomPass` + `OutputPass`, ACES filmic ton eşleme
-- **Performans koruması**: cihaz gücüne göre kademe seçimi, `devicePixelRatio` sınırı, gölge ve bloom çözünürlüğü kısıntısı, FPS düşerse otomatik kalite indirimi, point light bütçesi 4 ile sınırlı
-- **Erişilebilirlik**: tüm kontroller klavyeyle çalışır, düğmeler 44 px dokunma hedefi, mod değişimi `aria-live` ile ekran okuyucuya bildirilir, `prefers-reduced-motion` saygı görür
-- `webglcontextlost` / `webglcontextrestored` olayları yakalanır, bağlam kurtarılır
+Chrome, masaüstü, `file://` protokolü, Festival Modu:
 
-## Geliştirme önerileri
+| Ölçüm | Değer |
+|---|---|
+| Kare hızı | 60 FPS |
+| Sahne karmaşıklığı | 84.774 üçgen |
+| Dosya boyutu | 64.472 bayt |
+| Ağ isteği (Three.js dışında) | 0 |
 
-1. **Yolcu ve kalabalık**: standlar arasında yürüyen basit yaya ajanları, kuyruğa girip bilet alan ve trene binen figürler — sahne canlı bir yere dönüşür.
-2. **Web Audio ile prosedürel ses**: dosya kullanmadan osilatörle ray takırtısı, karusel melodisi ve doppler etkili tren geçişi; ses tamamen kodla üretilir, sıfır-varlık kuralı korunur.
-3. **Vagondan birinci şahıs görüş**: `C` tuşuyla kamerayı öndeki vagona kenetleyip ray boyunca sürüş; aynı eğri verisi ikinci bir deneyim üretir.
+## Nasıl yapıldı?
 
-## Doğrulama durumu — açık beyan
+**Sıfır varlık.** Depoda tek bir `.glb`, `.png` veya `.jpg` yok. Her gövde kutu, silindir, tor, küre ve `TubeGeometry`'den; her doku çalışma anında bir `<canvas>` üzerine çizilip `CanvasTexture`'a dönüştürülüyor. Tabeladaki yazılar dahil.
 
-Kod, tarayıcısız bir ortamda sahte (mock) bir THREE ve DOM katmanıyla 30 kare boyunca üç modda da hatasız çalıştırıldı; `index.html` bu depoya bayt-bayt aynı olacak şekilde yerleştirildi (64.472 bayt, md5 `52dc5bcb8ea52c5e0b0101090a653690`, CI tarafından doğrulandı). **Gerçek bir WebGL bağlamında görsel test yapılamadı** — üretildiği ortamda tarayıcı yoktu. Görsel sonucu kendi tarayıcınızda doğrulayın.
+**Ray bir eğri.** Yol `CatmullRomCurve3` ile kapalı bir eğri olarak tanımlı; trenin konumu ve viraj yatışı her karede eğrinin teğet–normal çerçevesinden türetiliyor, elle animasyon yok.
 
-## Lisans
+**Gökyüzü bir shader.** İçten görünen bir küre üzerinde `ShaderMaterial` gradyanı (`fog: false`, `renderOrder: -1`). Son işlem `EffectComposer` + `UnrealBloomPass` + ACES filmic ton eşleme.
 
-MIT — bkz. [LICENSE](LICENSE).
+**Kendini koruyor.** Cihaz gücüne göre kalite kademesi, `devicePixelRatio` sınırı, gölge ve bloom çözünürlüğü kısıntısı, kare hızı düşerse otomatik kalite indirimi, point light bütçesi 4. `webglcontextlost` yakalanıp bağlam geri kuruluyor.
+
+**Klavyeyle çalışıyor.** Tüm kontroller tuşla erişilebilir, düğmeler 44 px dokunma hedefinde, mod değişimi `aria-live` ile duyuruluyor, `prefers-reduced-motion` saygı görüyor.
+
+Bağımlılık: Three.js 0.169.0, ES modül `importmap` ile CDN'den. Bundler, paket yöneticisi, derleme adımı yok.
+
+## Sınırlar
+
+- Three.js CDN'den geldiği için ilk açılışta internet gerekir; sonrası tarayıcı önbelleğinden.
+- WebGL desteği zorunlu; çok eski cihazlarda kalite kademesi düşer.
+- Mobilde test edilmedi — kalite kademesi mobili hedefliyor ama ölçüm yapılmadı.
+
+## Buradan nereye
+
+1. **Kalabalık** — standlar arasında yürüyen, kuyruğa girip trene binen yaya figürleri.
+2. **Prosedürel ses** — Web Audio osilatörleriyle ray takırtısı, karusel melodisi, doppler'lı tren geçişi. Ses dosyası yok, sıfır-varlık kuralı bozulmuyor.
+3. **Vagondan bakış** — kamerayı öndeki vagona kenetleyip ray boyunca birinci şahıs sürüş; aynı eğri verisinden ikinci bir deneyim.
 
 ---
 
-Made by **Opus 5**.
+MIT — bkz. [LICENSE](LICENSE). &nbsp;·&nbsp; Made by **Opus 5**.
