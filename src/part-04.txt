@@ -1,0 +1,294 @@
+    new THREE.MeshStandardMaterial({ color: 0x27553a, roughness: 0.95 })
+  ];
+  for (let i = 0; i < 34; i++){
+    const a = Math.random() * Math.PI * 2;
+    const r = 58 + Math.random() * 34;
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    const h = 2.4 + Math.random() * 2.2;
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.32, h, 7), trunkMat);
+    trunk.position.set(x, h / 2, z);
+    trunk.castShadow = true;
+    park.add(trunk);
+    const crown = new THREE.Mesh(new THREE.IcosahedronGeometry(1.5 + Math.random(), 0), leafMats[i % 3]);
+    crown.position.set(x, h + 1.1, z);
+    crown.rotation.set(Math.random(), Math.random(), Math.random());
+    crown.castShadow = true;
+    park.add(crown);
+  }
+  // Benches: skip any spot that sits under a coaster support so nothing clips.
+  const trackXZ = [];
+  for (let i = 0; i < 160; i++){
+    const p = coaster.curve.getPointAt(i / 160);
+    trackXZ.push(p.x, p.z);
+  }
+  const clearOfTrack = (x, z) => {
+    for (let i = 0; i < trackXZ.length; i += 2){
+      if (Math.hypot(trackXZ[i] - x, trackXZ[i + 1] - z) < 2.6) return false;
+    }
+    return true;
+  };
+  for (let i = 0; i < 8; i++){
+    const a = (i / 8) * Math.PI * 2 + 0.4;
+    const r = 13.5;
+    if (!clearOfTrack(Math.cos(a) * r, Math.sin(a) * r + 6)) continue;
+    const b = new THREE.Group();
+    b.position.set(Math.cos(a) * r, 0, Math.sin(a) * r + 6);
+    b.rotation.y = -a;
+    const seat = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.14, 0.7), MAT.woodDark);
+    seat.position.y = 0.6; seat.castShadow = true;
+    b.add(seat);
+    const backRest = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.5, 0.12), MAT.woodDark);
+    backRest.position.set(0, 0.95, -0.3);
+    b.add(backRest);
+    for (const sx of [-0.9, 0.9]){
+      const leg = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.6, 0.6), MAT.steelDim);
+      leg.position.set(sx, 0.3, 0);
+      b.add(leg);
+    }
+    park.add(b);
+  }
+}
+
+// --- 7.10 Visitors (instanced, walking on gentle circles) ---
+const visitors = (() => {
+  const COUNT = 30;
+  const geo = new THREE.CapsuleGeometry(0.24, 0.62, 5, 10);
+  const mat = new THREE.MeshStandardMaterial({ roughness: 0.85, metalness: 0.02 });
+  const mesh = new THREE.InstancedMesh(geo, mat, COUNT);
+  mesh.castShadow = true;
+  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  const data = [];
+  const c = new THREE.Color();
+  for (let i = 0; i < COUNT; i++){
+    data.push({
+      r: 9 + Math.random() * 30,
+      a: Math.random() * Math.PI * 2,
+      speed: (0.08 + Math.random() * 0.14) * (Math.random() > 0.5 ? 1 : -1),
+      cx: (Math.random() - 0.5) * 12,
+      cz: 4 + (Math.random() - 0.5) * 14,
+      bob: Math.random() * Math.PI * 2
+    });
+    c.setHSL(Math.random(), 0.55, 0.55);
+    mesh.setColorAt(i, c);
+  }
+  if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  park.add(mesh);
+
+  // Heads as a second instanced mesh
+  const headMesh = new THREE.InstancedMesh(
+    new THREE.SphereGeometry(0.19, 8, 6),
+    new THREE.MeshStandardMaterial({ color: 0xf0c9a0, roughness: 0.9 }),
+    COUNT
+  );
+  headMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  headMesh.castShadow = true;
+  park.add(headMesh);
+
+  return { mesh, headMesh, data, count: COUNT, dummy: new THREE.Object3D() };
+})();
+
+// --- 7.11 Stars (night / festival only) ---
+const stars = (() => {
+  const N = 1400, pos = new Float32Array(N * 3), col = new Float32Array(N * 3);
+  const c = new THREE.Color();
+  for (let i = 0; i < N; i++){
+    const u = Math.random() * Math.PI * 2;
+    const v = Math.random() * 0.85;               // keep them above the horizon
+    const r = 340;
+    const y = Math.sin(v * Math.PI / 2);
+    const s = Math.cos(v * Math.PI / 2);
+    pos[i * 3]     = Math.cos(u) * s * r;
+    pos[i * 3 + 1] = y * r + 20;
+    pos[i * 3 + 2] = Math.sin(u) * s * r;
+    c.setHSL(0.55 + Math.random() * 0.12, 0.35, 0.7 + Math.random() * 0.3);
+    col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  const m = new THREE.PointsMaterial({
+    size: 1.9, map: GLOW, vertexColors: true, transparent: true, opacity: 1,
+    depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: false, fog: false
+  });
+  const p = new THREE.Points(g, m);
+  p.frustumCulled = false;
+  scene.add(p);
+  return { points: p, material: m };
+})();
+
+// --- 7.12 Fireworks / sparks (festival mode) ---
+const sparks = (() => {
+  const MAX = 420;
+  const pos = new Float32Array(MAX * 3);
+  const col = new Float32Array(MAX * 3);
+  const vel = new Float32Array(MAX * 3);
+  const life = new Float32Array(MAX);
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+  g.setDrawRange(0, MAX);
+  const m = new THREE.PointsMaterial({
+    size: 1.5, map: GLOW, vertexColors: true, transparent: true, opacity: 0,
+    depthWrite: false, blending: THREE.AdditiveBlending, sizeAttenuation: true, fog: false
+  });
+  const p = new THREE.Points(g, m);
+  p.frustumCulled = false;
+  scene.add(p);
+  for (let i = 0; i < MAX; i++) life[i] = 0;
+
+  let cursor = 0, timer = 0;
+  const c = new THREE.Color();
+
+  function burst(){
+    const ox = (Math.random() - 0.5) * 56;
+    const oz = (Math.random() - 0.5) * 56;
+    const oy = 20 + Math.random() * 16;
+    const hue = Math.random();
+    const n = 44 + Math.floor(Math.random() * 26);
+    for (let k = 0; k < n; k++){
+      const i = cursor; cursor = (cursor + 1) % MAX;
+      const th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1);
+      const sp = 5 + Math.random() * 9;
+      vel[i * 3]     = Math.sin(ph) * Math.cos(th) * sp;
+      vel[i * 3 + 1] = Math.cos(ph) * sp;
+      vel[i * 3 + 2] = Math.sin(ph) * Math.sin(th) * sp;
+      pos[i * 3] = ox; pos[i * 3 + 1] = oy; pos[i * 3 + 2] = oz;
+      c.setHSL((hue + Math.random() * 0.12) % 1, 0.9, 0.62);
+      col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+      life[i] = 1.7 + Math.random() * 0.9;
+    }
+  }
+
+  function update(dt, weight){
+    m.opacity = weight;
+    if (weight > 0.35){
+      timer -= dt;
+      if (timer <= 0){ burst(); timer = 0.55 + Math.random() * 0.9; }
+    }
+    let alive = false;
+    for (let i = 0; i < MAX; i++){
+      if (life[i] <= 0){
+        if (col[i * 3] !== 0){ col[i * 3] = col[i * 3 + 1] = col[i * 3 + 2] = 0; }
+        continue;
+      }
+      alive = true;
+      life[i] -= dt;
+      vel[i * 3 + 1] -= 6.5 * dt;
+      vel[i * 3]     *= 0.985;
+      vel[i * 3 + 2] *= 0.985;
+      pos[i * 3]     += vel[i * 3] * dt;
+      pos[i * 3 + 1] += vel[i * 3 + 1] * dt;
+      pos[i * 3 + 2] += vel[i * 3 + 2] * dt;
+      const f = Math.max(life[i] / 2.6, 0);
+      col[i * 3] *= 0.985 + 0.015 * f;
+      col[i * 3 + 1] *= 0.982;
+      col[i * 3 + 2] *= 0.982;
+    }
+    g.attributes.position.needsUpdate = true;
+    g.attributes.color.needsUpdate = true;
+    return alive;
+  }
+  return { update };
+})();
+
+/* --------------------- 8. Post-processing --------------------- */
+
+const composer = new EffectComposer(renderer);
+composer.setPixelRatio(dpr());
+composer.setSize(window.innerWidth, window.innerHeight);
+const renderPass = new RenderPass(scene, camera);
+const bloomPass  = new UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth * BLOOM_SCALE, window.innerHeight * BLOOM_SCALE),
+  M.bloom, 0.72, M.bloomThreshold
+);
+composer.addPass(renderPass);
+composer.addPass(bloomPass);
+composer.addPass(new OutputPass());
+
+/* --------------------- 9. Mode blending --------------------- */
+
+const COLOR_KEYS = ['skyTop', 'skyBot', 'horizon', 'fog', 'hemiSky', 'hemiGround', 'sunColor', 'ground'];
+const NUM_KEYS   = ['fogDensity', 'hemiInt', 'sunInt', 'ambient', 'bloom', 'bloomThreshold',
+                    'neon', 'stars', 'spin', 'sparks', 'exposure', 'glow', 'dayW', 'festW'];
+
+// Live values (mutated every frame while a transition runs)
+const live = { colors: {}, nums: {}, sunPos: new THREE.Vector3() };
+for (const k of COLOR_KEYS) live.colors[k] = new THREE.Color(MODES.night[k]);
+for (const k of NUM_KEYS)   live.nums[k]   = MODES.night[k];
+live.sunPos.set(...MODES.night.sunPos);
+
+function snapshot(){
+  const s = { sunPos: live.sunPos.clone() };
+  for (const k of COLOR_KEYS) s[k] = live.colors[k].getHex();
+  for (const k of NUM_KEYS)   s[k] = live.nums[k];
+  return s;
+}
+const cA = new THREE.Color(), cB = new THREE.Color();
+const vSunA = new THREE.Vector3(), vSunB = new THREE.Vector3();
+let festivalWeight = 0;
+
+function evaluateMode(){
+  const e = modeT >= 1 ? 1 : modeT * modeT * (3 - 2 * modeT);   // smoothstep
+  for (const k of COLOR_KEYS){
+    cA.set(modeFrom[k]); cB.set(modeTo[k]);
+    live.colors[k].copy(cA).lerp(cB, e);
+  }
+  for (const k of NUM_KEYS){
+    live.nums[k] = modeFrom[k] + (modeTo[k] - modeFrom[k]) * e;
+  }
+  const fa = modeFrom.sunPos;
+  const fb = modeTo.sunPos;
+  const from = Array.isArray(fa) ? vSunA.set(fa[0], fa[1], fa[2]) : vSunA.copy(fa);
+  live.sunPos.copy(from).lerp(vSunB.set(fb[0], fb[1], fb[2]), e);
+
+  festivalWeight = live.nums.festW;
+  return { e, dayWeight: live.nums.dayW };
+}
+
+function applyLive(dayWeight, time){
+  // Sky
+  skyU.topColor.value.copy(live.colors.skyTop);
+  skyU.bottomColor.value.copy(live.colors.skyBot);
+  skyU.horizonColor.value.copy(live.colors.horizon);
+  skyU.sunDir.value.copy(live.sunPos).normalize();
+  skyU.sunPower.value = dayWeight;
+  skyU.sunTint.value.copy(live.colors.sunColor);
+
+  // Fog & exposure
+  scene.fog.color.copy(live.colors.fog);
+  scene.fog.density = live.nums.fogDensity;
+  renderer.toneMappingExposure = live.nums.exposure;
+
+  // Lights
+  hemi.color.copy(live.colors.hemiSky);
+  hemi.groundColor.copy(live.colors.hemiGround);
+  hemi.intensity = live.nums.hemiInt;
+  ambient.intensity = live.nums.ambient;
+  sun.color.copy(live.colors.sunColor);
+  sun.intensity = live.nums.sunInt;
+  sun.position.copy(live.sunPos);
+
+  // Ground tint reacts to the light mood
+  MAT.ground.color.copy(live.colors.ground);
+
+  // Emissive materials
+  const neon = live.nums.neon;
+  for (const m of emissives) m.emissiveIntensity = m.userData.baseEmissive * neon;
+
+  // Coloured park lights
+  const glow = live.nums.glow;
+  for (const l of parkLights){
+    l.intensity = l.userData.base * glow;
+    if (l.userData.hue !== null && festivalWeight > 0.01){
+      cA.setHSL((l.userData.hue + time * 0.09) % 1, 0.9, 0.58);
+      cB.setHSL(l.userData.hue, 0.85, 0.55);
+      l.color.copy(cB).lerp(cA, festivalWeight);
+    }
+  }
+
+  // Bloom
+  bloomPass.strength = live.nums.bloom;
+  bloomPass.threshold = live.nums.bloomThreshold;
+
+  // Stars & bulbs
+  stars.material.opacity = live.nums.stars;
