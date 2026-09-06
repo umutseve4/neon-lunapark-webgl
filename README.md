@@ -10,6 +10,11 @@
 </p>
 
 <p align="center">
+  <a href="https://umutseve4.github.io/neon-lunapark-webgl/"><b>▶ Canlı demoyu aç</b></a>
+  &nbsp;·&nbsp; hiçbir şey indirmeden, doğrudan tarayıcıda
+</p>
+
+<p align="center">
   <a href="index.html"><img src="https://img.shields.io/badge/index.html-63%20KB-FF4D4F?style=flat-square" alt="Tek dosya, 63 KB"></a>
   <img src="https://img.shields.io/badge/ba%C4%9F%C4%B1ml%C4%B1l%C4%B1k-0-FF4D4F?style=flat-square" alt="Sıfır bağımlılık">
   <img src="https://img.shields.io/badge/60-FPS-FF4D4F?style=flat-square" alt="60 FPS ölçüldü">
@@ -32,6 +37,10 @@ Kapalı bir ray üzerinde dört vagonluk bir tren koşuyor, virajlarda içeri ya
 Yukarıdaki kare Festival Modu. Geçişler ani değil: gökyüzü, sis, ışık renkleri ve bloom değerleri birbirine yumuşayarak karışır.
 
 ## Nasıl açarım?
+
+En hızlısı: [**canlı sürümü tarayıcıda açın**](https://umutseve4.github.io/neon-lunapark-webgl/) — indirme yok.
+
+Yerelde çalıştırmak isterseniz:
 
 ```
 1. index.html dosyasını indirin
