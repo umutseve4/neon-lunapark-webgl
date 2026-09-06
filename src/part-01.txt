@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Neon Lunapark — 3D Miniature Amusement Park</title>
+<meta name="description" content="Tek dosyalık, sıfır bağımlılıklı 3B minyatür lunapark: ray üzerinde giden roller coaster treni, dönen dönme dolap, karusel, bilet gişesi, oyun ve yiyecek standı, neon ışıklar. Gündüz / Normal Gece / Festival modları." />
+<meta name="color-scheme" content="dark" />
+<style>
+  :root{
+    --paper:#f4f4f5;
+    --accent:#ff4d4f;
+    --muted:rgba(244,244,245,.62);
+    --line:rgba(244,244,245,.16);
+    --panel:rgba(12,12,16,.55);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0; background:#05060a; color:var(--paper);
+    font:400 14px/1.5 ui-sans-serif,-apple-system,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+    overflow:hidden; -webkit-font-smoothing:antialiased;
+  }
+  #stage{position:fixed; inset:0}
+  canvas{display:block; width:100%; height:100%; outline:none; touch-action:none; cursor:grab}
+  canvas:active{cursor:grabbing}
+  canvas:focus-visible{outline:2px solid var(--accent); outline-offset:-4px}
+
+  .hud{position:fixed; z-index:5; pointer-events:none}
+  .hud > *{pointer-events:auto}
+
+  #title{top:max(18px,env(safe-area-inset-top)); left:max(18px,env(safe-area-inset-left)); max-width:min(48ch,70vw)}
+  #title h1{margin:0; font-size:clamp(15px,2.1vw,21px); font-weight:650; letter-spacing:.14em; text-transform:uppercase}
+  #title h1 span{color:var(--accent)}
+  #title p{margin:6px 0 0; font-size:12.5px; color:var(--muted)}
+
+  #modes{
+    top:max(18px,env(safe-area-inset-top)); right:max(18px,env(safe-area-inset-right));
+    display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;
+  }
+  button{
+    font:inherit; font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--paper); background:var(--panel); border:1px solid var(--line);
+    padding:9px 14px; border-radius:999px; cursor:pointer;
+    display:inline-flex; align-items:center; justify-content:center;
+    min-height:44px; min-width:44px;
+    backdrop-filter:blur(9px); -webkit-backdrop-filter:blur(9px);
+    transition:border-color .18s ease, background .18s ease, transform .18s ease;
+  }
+  button:hover{border-color:rgba(244,244,245,.42); transform:translateY(-1px)}
+  button:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  button[aria-pressed="true"]{border-color:var(--accent); color:#fff; background:rgba(255,77,79,.18)}
+
+  #legend{
+    left:max(18px,env(safe-area-inset-left)); bottom:max(18px,env(safe-area-inset-bottom));
+    font-size:11.5px; color:var(--muted); letter-spacing:.06em; text-transform:uppercase;
+    display:flex; gap:14px; flex-wrap:wrap; max-width:min(64ch,80vw);
+  }
+  #legend b{font-weight:600; color:var(--paper)}
+  #sig{
+    right:max(18px,env(safe-area-inset-right)); bottom:max(18px,env(safe-area-inset-bottom));
+    font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:rgba(244,244,245,.45);
+  }
+  #stat{
+    right:max(18px,env(safe-area-inset-right)); bottom:calc(max(18px,env(safe-area-inset-bottom)) + 22px);
+    font-variant-numeric:tabular-nums; font-size:11px; letter-spacing:.1em; color:rgba(244,244,245,.34);
+  }
+  #boot{
+    position:fixed; inset:0; z-index:9; display:grid; place-items:center; background:#05060a;
+    letter-spacing:.24em; text-transform:uppercase; font-size:12px; color:var(--muted);
+    transition:opacity .7s ease; text-align:center; padding:24px;
+  }
+  #boot.gone{opacity:0; pointer-events:none}
+  #boot .bar{margin:14px auto 0; width:180px; height:2px; background:rgba(255,255,255,.12); overflow:hidden}
+  #boot .bar i{display:block; height:100%; width:40%; background:var(--accent); animation:slide 1.1s ease-in-out infinite}
+  @keyframes slide{0%{transform:translateX(-110%)}100%{transform:translateX(260%)}}
+  .err{color:#ffb4b5; max-width:60ch; line-height:1.6; letter-spacing:.02em; text-transform:none; font-size:13px}
+  @media (max-width:640px){
+    #legend{display:none}
+    #title p{display:none}
+    button{padding:8px 11px; font-size:11px; min-height:44px}
+  }
+  .sr-only{
+    position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+    overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+  }
+  #boot .reload{
+    margin-top:16px; min-height:44px; padding:10px 18px; border-radius:999px;
+    font:inherit; font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--paper); background:rgba(255,77,79,.18); border:1px solid var(--accent); cursor:pointer;
+  }
+  @media (prefers-reduced-motion: reduce){
+    #boot .bar i{animation:none; width:100%}
+    button{transition:none}
+  }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+
+<header id="title" class="hud">
+  <h1>Neon <span>Lunapark</span></h1>
+  <p>Minyatür bir lunapark — tek dosya, sıfır bağımlılık, her geometri kod ile üretildi.</p>
+</header>
+
+<nav id="modes" class="hud" aria-label="Atmosfer modu">
+  <button type="button" aria-pressed="false" data-mode="day">Gündüz</button>
+  <button type="button" aria-pressed="true"  data-mode="night">Normal Gece</button>
+  <button type="button" aria-pressed="false" data-mode="festival">Festival Modu</button>
+</nav>
+
+<div id="legend" class="hud">
+  <span><b>Sürükle</b> döndür</span>
+  <span><b>Tekerlek</b> yakınlaş</span>
+  <span><b>1 2 3</b> mod</span>
+  <span><b>Boşluk</b> otomatik kamera</span>
+</div>
+<div id="stat" class="hud" aria-hidden="true">—</div>
+<p id="say" class="sr-only" role="status" aria-live="polite"></p>
+<div id="sig" class="hud">Made by Opus 5</div>
+
+<div id="boot" role="status" aria-live="polite">
+  <div>
+    <div id="boot-msg">Lunapark kuruluyor</div>
+    <div class="bar" aria-hidden="true"><i></i></div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.169.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.169.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { EffectComposer }   from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass }       from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass }  from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass }       from 'three/addons/postprocessing/OutputPass.js';
+
+/* ==================================================================
+   NEON LUNAPARK — single-file WebGL scene.
+   No API keys, no backend, no imported 3D models, no bitmap assets.
+   Every mesh is a primitive; every texture is painted to a <canvas>.
+   ================================================================== */
+
+const boot    = document.getElementById('boot');
+const bootMsg = document.getElementById('boot-msg');
+const statEl  = document.getElementById('stat');
+const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const sayEl   = document.getElementById('say');
+
+/* Quality tier — phones and coarse-pointer devices pay for DPR², bloom and
+   shadow maps at the same time, so cap all three up front. */
+const COARSE  = window.matchMedia('(pointer: coarse)').matches;
+const SMALL   = Math.min(window.screen ? window.screen.width : 1920,
+                         window.screen ? window.screen.height : 1080) < 820;
+const LOWPWR  = COARSE || SMALL;
+const SHADOW_RES  = LOWPWR ? 1024 : 2048;
+const BLOOM_SCALE = LOWPWR ? 0.5 : 1;
+let   dprCap      = LOWPWR ? 1.25 : 2;
+const dpr = () => Math.min(window.devicePixelRatio || 1, dprCap);
+
+function say(msg){
+  // Screen-reader announcement; re-set to '' first so repeats are still spoken.
+  if (!sayEl) return;
+  sayEl.textContent = '';
+  setTimeout(() => { sayEl.textContent = msg; }, 30);
+}
+
+function fail(err){
+  console.error(err);
+  boot.classList.remove('gone');
+  const bar = boot.querySelector('.bar'); if (bar) bar.remove();
+  bootMsg.innerHTML = '<div class="err"><b>Sahne başlatılamadı.</b><br>WebGL desteği ya da CDN erişimi yok gibi görünüyor.<br>' +
+    String(err && err.message ? err.message : err).replace(/[<>&]/g, ' ') + '</div>';
+  if (!boot.querySelector('.reload')){
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'reload'; b.textContent = 'Yeniden yükle';
+    b.addEventListener('click', () => location.reload());
+    bootMsg.appendChild(b);
+    b.focus();
+  }
+}
+window.addEventListener('error', e => { if (!boot.classList.contains('gone')) fail(e.error || e.message); });
+
+/* ------------------------------ 1. Modes ------------------------------ */
+
+const MODES = {
+  day: {
+    label:'Gündüz',
+    skyTop:0x2c79cf, skyBot:0xcfe8ff, horizon:0xe8f4ff,
+    fog:0xc3dcf2, fogDensity:0.0030,
+    hemiSky:0xbfdcff, hemiGround:0x6d6450, hemiInt:1.30,
+    sunColor:0xfff3de, sunInt:2.70, sunPos:[42,52,28],
+    ambient:0.40, bloom:0.16, bloomThreshold:0.90,
+    neon:0.30, stars:0.0, spin:1.0, sparks:0, exposure:1.02,
+    ground:0x9a978f, glow:0.25, dayW:1, festW:0
+  },
+  night: {
+    label:'Normal Gece',
+    skyTop:0x04050d, skyBot:0x12172f, horizon:0x2a2b52,
+    fog:0x090b16, fogDensity:0.0070,
+    hemiSky:0x2b3459, hemiGround:0x08080e, hemiInt:0.34,
+    sunColor:0x9fb6ff, sunInt:0.45, sunPos:[-34,44,-24],
+    ambient:0.10, bloom:0.95, bloomThreshold:0.60,
+    neon:1.00, stars:1.0, spin:1.0, sparks:0, exposure:1.00,
+    ground:0x3d3d46, glow:1.0, dayW:0, festW:0
+  },
+  festival: {
+    label:'Festival Modu',
+    skyTop:0x120426, skyBot:0x3b0b4c, horizon:0x74134f,
+    fog:0x1a0724, fogDensity:0.0084,
+    hemiSky:0x5c2a7d, hemiGround:0x180818, hemiInt:0.58,
+    sunColor:0xff9ad8, sunInt:0.62, sunPos:[-28,40,26],
+    ambient:0.16, bloom:1.45, bloomThreshold:0.48,
+    neon:2.05, stars:1.0, spin:1.85, sparks:1, exposure:1.06,
+    ground:0x554359, glow:1.7, dayW:0, festW:1
+  }
+};
+
+let modeKey  = 'night';
+let modeFrom = MODES.night;
+let modeTo   = MODES.night;
+let modeT    = 1;                       // 0..1 blend progress
+const M = Object.assign({}, MODES.night);  // live interpolated values
+
+/* --------------------------- 2. Renderer --------------------------- */
+
+const stage = document.getElementById('stage');
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ antialias:true, powerPreference:'high-performance' });
+} catch (e) { fail(e); throw e; }
+
+renderer.setPixelRatio(dpr());
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.0;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const canvas = renderer.domElement;
+canvas.tabIndex = 0;
+canvas.setAttribute('role', 'img');
+canvas.setAttribute('aria-label',
+  '3B minyatür lunapark sahnesi: dönen dönme dolap, ray üzerinde ilerleyen roller coaster treni, karusel, bilet gişesi, oyun ve yiyecek standı, neon ışıklar. Fare ile sürükleyerek döndürebilirsiniz.');
+stage.appendChild(canvas);
+
+const scene  = new THREE.Scene();
+scene.fog    = new THREE.FogExp2(new THREE.Color(M.fog), M.fogDensity);
+const camera = new THREE.PerspectiveCamera(46, window.innerWidth / window.innerHeight, 0.4, 1200);
+camera.position.set(48, 27, 48);
+
+/* --------------------------- 3. Sky dome --------------------------- */
+
+const skyU = {
+  topColor:     { value: new THREE.Color(M.skyTop) },
+  bottomColor:  { value: new THREE.Color(M.skyBot) },
+  horizonColor: { value: new THREE.Color(M.horizon) },
+  sunDir:       { value: new THREE.Vector3(1, 1, 1).normalize() },
+  sunPower:     { value: 0.0 },
+  sunTint:      { value: new THREE.Color(0xfff0d0) }
+};
+const sky = new THREE.Mesh(
+  new THREE.SphereGeometry(500, 32, 20),
+  new THREE.ShaderMaterial({
+    side: THREE.BackSide, depthWrite: false, fog: false, uniforms: skyU,
+    vertexShader: `
+      varying vec3 vDir;
+      void main(){
+        vec4 wp = modelMatrix * vec4(position, 1.0);
+        vDir = normalize(wp.xyz - cameraPosition);
+        gl_Position = projectionMatrix * viewMatrix * wp;
+      }`,
+    fragmentShader: `
+      uniform vec3 topColor, bottomColor, horizonColor, sunTint, sunDir;
+      uniform float sunPower;
+      varying vec3 vDir;
+      void main(){
+        vec3 d = normalize(vDir);
+        float h = d.y;
+        vec3 low = mix(bottomColor, horizonColor, smoothstep(-0.30, 0.02, h));
+        vec3 col = mix(low, topColor, smoothstep(0.0, 0.62, h));
+        float sd = max(dot(d, normalize(sunDir)), 0.0);
+        col += sunTint * (pow(sd, 220.0) * 1.6 + pow(sd, 8.0) * 0.28) * sunPower;
+        gl_FragColor = vec4(col, 1.0);
+      }`
+  })
+);
+sky.renderOrder = -1;
+scene.add(sky);
+
+/* ---------------------------- 4. Lights ---------------------------- */
