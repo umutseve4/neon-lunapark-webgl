@@ -1,4 +1,6 @@
-<!-- HERO: ekran görüntüsü URL'i buraya gelecek -->
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/d972e640-f52b-41cc-b513-d1ac4eae463d" alt="Neon Lunapark — Festival Modu: dönme dolap, karusel, neon kemer ve ışıklı coaster rayı" width="900">
+</p>
 
 <h1 align="center">Neon Lunapark</h1>
 
@@ -27,7 +29,7 @@ Kapalı bir ray üzerinde dört vagonluk bir tren koşuyor, virajlarda içeri ya
 | **Normal Gece** | Lacivert gökyüzü, yıldızlar, ay ışığı, ölçülü parıltı |
 | **Festival** | Mor-macenta gökyüzü, doygun renk, güçlü bloom, hızlanmış ışık |
 
-Geçişler ani değil: gökyüzü, sis, ışık renkleri ve bloom değerleri birbirine yumuşayarak karışır.
+Yukarıdaki kare Festival Modu. Geçişler ani değil: gökyüzü, sis, ışık renkleri ve bloom değerleri birbirine yumuşayarak karışır.
 
 ## Nasıl açarım?
 
@@ -53,7 +55,7 @@ Fareyi bıraktıktan birkaç saniye sonra otomatik tur kendiliğinden devralır.
 
 ## Ölçülen performans
 
-Chrome, masaüstü, `file://` protokolü, Festival Modu:
+Yukarıdaki karenin alındığı oturum — Chrome, masaüstü, `file://` protokolü, Festival Modu:
 
 | Ölçüm | Değer |
 |---|---|
