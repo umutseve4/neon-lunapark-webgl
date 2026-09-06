@@ -1,0 +1,296 @@
+  stars.points.visible = live.nums.stars > 0.02;
+  bulbs.material.opacity = Math.min(1, 0.25 + live.nums.neon * 0.55);
+  bulbs.material.size = 0.75 + live.nums.neon * 0.42;
+}
+
+function setMode(key, instant){
+  if (!MODES[key]) return;
+  modeKey = key;
+  modeFrom = snapshot();
+  modeTo = MODES[key];
+  modeT = instant ? 1 : 0;
+  document.querySelectorAll('#modes button').forEach(b => {
+    b.setAttribute('aria-pressed', String(b.dataset.mode === key));
+  });
+  canvas.setAttribute('aria-description', 'Aktif atmosfer: ' + MODES[key].label);
+  say('Atmosfer: ' + MODES[key].label);
+}
+document.querySelectorAll('#modes button').forEach(b => {
+  b.addEventListener('click', () => setMode(b.dataset.mode, false));
+});
+
+/* --------------------- 10. Camera control --------------------- */
+
+const target = new THREE.Vector3(1, 7.5, 2);
+const cam = {
+  theta: Math.PI * 0.25,
+  phi: 1.06,
+  radius: 68,
+  tTheta: Math.PI * 0.25,
+  tPhi: 1.06,
+  tRadius: 68,
+  auto: !REDUCED,
+  idle: 0
+};
+const PHI_MIN = 0.32, PHI_MAX = 1.44;
+
+let dragging = false, lastX = 0, lastY = 0, pointerId = null;
+canvas.addEventListener('pointerdown', e => {
+  dragging = true; pointerId = e.pointerId;
+  lastX = e.clientX; lastY = e.clientY;
+  canvas.setPointerCapture(e.pointerId);
+  cam.idle = 0;
+});
+canvas.addEventListener('pointermove', e => {
+  if (!dragging || e.pointerId !== pointerId) return;
+  const dx = e.clientX - lastX, dy = e.clientY - lastY;
+  lastX = e.clientX; lastY = e.clientY;
+  cam.tTheta -= dx * 0.0042;
+  cam.tPhi = Math.min(PHI_MAX, Math.max(PHI_MIN, cam.tPhi - dy * 0.0032));
+  cam.idle = 0;
+});
+function endDrag(e){
+  if (pointerId !== null && e.pointerId === pointerId){
+    dragging = false; pointerId = null;
+    try { canvas.releasePointerCapture(e.pointerId); } catch (_) {}
+  }
+}
+canvas.addEventListener('pointerup', endDrag);
+canvas.addEventListener('pointercancel', endDrag);
+canvas.addEventListener('lostpointercapture', () => { dragging = false; pointerId = null; });
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  cam.tRadius = Math.min(120, Math.max(26, cam.tRadius + e.deltaY * 0.045));
+  cam.idle = 0;
+}, { passive: false });
+
+// Two-finger pinch zoom
+const touches = new Map();
+canvas.addEventListener('pointerdown', e => touches.set(e.pointerId, e));
+canvas.addEventListener('pointerup', e => touches.delete(e.pointerId));
+canvas.addEventListener('pointercancel', e => touches.delete(e.pointerId));
+let pinchDist = 0;
+canvas.addEventListener('pointermove', e => {
+  if (!touches.has(e.pointerId)) return;
+  touches.set(e.pointerId, e);
+  if (touches.size === 2){
+    const [a, b] = [...touches.values()];
+    const d = Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY);
+    if (pinchDist) cam.tRadius = Math.min(120, Math.max(26, cam.tRadius + (pinchDist - d) * 0.16));
+    pinchDist = d;
+    dragging = false;
+  } else pinchDist = 0;
+});
+
+window.addEventListener('keydown', e => {
+  if (e.key === '1') setMode('day');
+  else if (e.key === '2') setMode('night');
+  else if (e.key === '3') setMode('festival');
+  else if (e.code === 'Space'){
+    // Only hijack Space when nothing focusable owns it (buttons need their own Space).
+    const t = e.target;
+    if (t === document.body || t === canvas || t === document.documentElement){
+      e.preventDefault(); cam.auto = !cam.auto; cam.idle = 0;
+      say(cam.auto ? 'Otomatik kamera açık' : 'Otomatik kamera kapalı');
+    }
+  }
+  else if (e.key === 'ArrowLeft'){ cam.tTheta += 0.12; cam.idle = 0; }
+  else if (e.key === 'ArrowRight'){ cam.tTheta -= 0.12; cam.idle = 0; }
+  else if (e.key === 'ArrowUp'){ cam.tPhi = Math.max(PHI_MIN, cam.tPhi - 0.06); cam.idle = 0; }
+  else if (e.key === 'ArrowDown'){ cam.tPhi = Math.min(PHI_MAX, cam.tPhi + 0.06); cam.idle = 0; }
+  else if (e.key === '+' || e.key === '='){ cam.tRadius = Math.max(26, cam.tRadius - 4); }
+  else if (e.key === '-' || e.key === '_'){ cam.tRadius = Math.min(120, cam.tRadius + 4); }
+});
+
+/* --------------------- 11. Resize / lifecycle --------------------- */
+
+function resize(){
+  const w = window.innerWidth, h = window.innerHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setPixelRatio(dpr());
+  renderer.setSize(w, h);
+  composer.setPixelRatio(dpr());
+  composer.setSize(w, h);
+  bloomPass.setSize(w * BLOOM_SCALE, h * BLOOM_SCALE);
+}
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 120));
+
+let paused = false;
+document.addEventListener('visibilitychange', () => { paused = document.hidden; });
+canvas.addEventListener('webglcontextlost', e => {
+  e.preventDefault();
+  paused = true;
+  fail(new Error('WebGL bağlamı kayboldu.'));
+});
+canvas.addEventListener('webglcontextrestored', () => {
+  // The GPU gave the context back: rebuild GPU-side state and resume.
+  try {
+    renderer.resetState();
+    resize();
+    renderer.compile(scene, camera);
+    boot.classList.add('gone');
+    const b = boot.querySelector('.reload'); if (b) b.remove();
+    paused = document.hidden;
+    say('Görüntü geri yüklendi');
+  } catch (err) { fail(err); }
+});
+
+/* --------------------- 12. Animation loop --------------------- */
+
+const clock = new THREE.Clock();
+const ANIM = REDUCED ? 0 : 1;      // reduced-motion: everything freezes, orbit stays usable
+let time = 0, fpsAcc = 0, fpsCount = 0, statTimer = 0, slowTicks = 0, downgrades = 0;
+const vTmp = new THREE.Vector3(), vFwd = new THREE.Vector3(), vUp = new THREE.Vector3(0, 1, 0);
+
+// Static triangle budget (counted once — cheaper and more honest than a per-frame probe).
+const TRIS = (() => {
+  let n = 0;
+  scene.traverse(o => {
+    if (!o.isMesh && !o.isInstancedMesh) return;
+    const g = o.geometry;
+    if (!g || !g.attributes || !g.attributes.position) return;
+    const tri = g.index ? g.index.count / 3 : g.attributes.position.count / 3;
+    n += tri * (o.isInstancedMesh ? o.count : 1);
+  });
+  return Math.round(n);
+})();
+
+function frame(){
+  requestAnimationFrame(frame);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  if (paused) return;
+  time += dt * ANIM;
+
+  // --- mode blend ---
+  if (modeT < 1){ modeT = Math.min(1, modeT + dt / 1.3); }
+  const { dayWeight } = evaluateMode();
+  applyLive(dayWeight, time);
+
+  const spin = live.nums.spin * ANIM;
+
+  // --- ferris wheel ---
+  ferris.wheel.rotation.z += dt * 0.11 * spin;
+  for (const g of ferris.gondolas) g.rotation.z = -ferris.wheel.rotation.z;
+
+  // --- carousel ---
+  carousel.spin.rotation.y += dt * 0.42 * spin;
+  for (const h of carousel.horses){
+    h.obj.position.y = 1.9 + Math.sin(time * 2.4 * live.nums.spin + h.phase) * 0.42;
+  }
+
+  // --- coaster train ---
+  {
+    const speed = 0.045 * (0.85 + 0.35 * live.nums.spin) * ANIM;
+    coaster.u = ((coaster.u || 0) + dt * speed) % 1;
+    for (let i = 0; i < coaster.cars.length; i++){
+      const u = (coaster.u - i * coaster.spacing + 1) % 1;
+      const p = coaster.curve.getPointAt(u);
+      const t = coaster.curve.getTangentAt(u);
+      const car = coaster.cars[i];
+      car.position.copy(p).addScaledVector(vUp, 0.12);
+      car.lookAt(vTmp.copy(p).add(t));
+      // bank into the curve using the tangent's rate of change
+      const t2 = coaster.curve.getTangentAt((u + 0.004) % 1);
+      vFwd.subVectors(t2, t);
+      // measured max lateral term ≈ 0.061 → factor 5 keeps the roll under ~18°
+      const lateral = vFwd.dot(vTmp.crossVectors(t, vUp).normalize());
+      car.rotateZ(THREE.MathUtils.clamp(-lateral * 5, -0.32, 0.32));
+    }
+  }
+
+  // --- visitors ---
+  {
+    const d = visitors.dummy;
+    for (let i = 0; i < visitors.count; i++){
+      const v = visitors.data[i];
+      v.a += dt * v.speed * ANIM * 0.5;
+      const x = v.cx + Math.cos(v.a) * v.r;
+      const z = v.cz + Math.sin(v.a) * v.r * 0.82;
+      const bobY = Math.abs(Math.sin(time * 5 + v.bob)) * 0.06;
+      d.position.set(x, 0.62 + bobY, z);
+      d.rotation.set(0, -v.a + (v.speed > 0 ? Math.PI / 2 : -Math.PI / 2), 0);
+      d.scale.setScalar(1);
+      d.updateMatrix();
+      visitors.mesh.setMatrixAt(i, d.matrix);
+      d.position.y = 1.15 + bobY;
+      d.updateMatrix();
+      visitors.headMesh.setMatrixAt(i, d.matrix);
+    }
+    visitors.mesh.instanceMatrix.needsUpdate = true;
+    visitors.headMesh.instanceMatrix.needsUpdate = true;
+  }
+
+  // --- bulb twinkle ---
+  {
+    const arr = bulbs.colAttr.array, base = bulbs.base;
+    const chase = festivalWeight;
+    for (let i = 0; i < bulbs.count; i++){
+      const tw = 0.72 + 0.28 * Math.sin(time * 3.1 + bulbs.phases[i]);
+      const ch = chase > 0.01 ? (0.45 + 0.55 * Math.sin(time * 6.0 - i * 0.35)) : 1;
+      const f = tw * (1 - chase) + tw * ch * chase * 1.5;
+      arr[i * 3]     = base[i * 3] * f;
+      arr[i * 3 + 1] = base[i * 3 + 1] * f;
+      arr[i * 3 + 2] = base[i * 3 + 2] * f;
+    }
+    bulbs.colAttr.needsUpdate = true;
+  }
+
+  // --- fireworks ---
+  sparks.update(dt, live.nums.sparks * ANIM);
+
+  // --- camera ---
+  cam.idle += dt;
+  if (cam.auto && !dragging && cam.idle > 2.5) cam.tTheta += dt * 0.055;
+  cam.theta  += (cam.tTheta  - cam.theta)  * Math.min(1, dt * 4.2);
+  cam.phi    += (cam.tPhi    - cam.phi)    * Math.min(1, dt * 4.2);
+  cam.radius += (cam.tRadius - cam.radius) * Math.min(1, dt * 3.4);
+  const sp = Math.sin(cam.phi), cp = Math.cos(cam.phi);
+  camera.position.set(
+    target.x + cam.radius * sp * Math.cos(cam.theta),
+    target.y + cam.radius * cp + 6,
+    target.z + cam.radius * sp * Math.sin(cam.theta)
+  );
+  camera.lookAt(target);
+  sun.target.position.set(0, 0, 0);
+  sun.target.updateMatrixWorld();
+
+  composer.render();
+
+  // --- stats ---
+  fpsAcc += dt; fpsCount++; statTimer += dt;
+  if (statTimer > 0.5){
+    const fps = fpsCount / fpsAcc;
+    statEl.textContent = MODES[modeKey].label + ' · ' + fps.toFixed(0) + ' FPS · ' +
+      TRIS.toLocaleString('tr-TR') + ' üçgen';
+    fpsAcc = 0; fpsCount = 0; statTimer = 0;
+
+    // Adaptive downgrade: four consecutive slow half-seconds (≈2 s) drops
+    // resolution once, then bloom resolution once. Never upgrades back —
+    // oscillating quality is worse than a stable lower tier.
+    if (fps < 40 && isFinite(fps)) slowTicks++; else slowTicks = 0;
+    if (slowTicks >= 4 && downgrades < 2){
+      downgrades++; slowTicks = 0;
+      if (downgrades === 1){ dprCap = Math.min(dprCap, 1); resize(); }
+      else { bloomPass.setSize(window.innerWidth * 0.5, window.innerHeight * 0.5); }
+    }
+  }
+}
+
+/* --------------------- 13. Go --------------------- */
+
+resize();
+setMode('night', true);
+evaluateMode();
+applyLive(0, 0);
+renderer.compile(scene, camera);
+frame();
+requestAnimationFrame(() => {
+  boot.classList.add('gone');
+  setTimeout(() => { boot.style.display = 'none'; }, 800);
+});
+</script>
+</body>
+</html>
