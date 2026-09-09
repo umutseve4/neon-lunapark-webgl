@@ -1,104 +1,123 @@
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/d972e640-f52b-41cc-b513-d1ac4eae463d" alt="Neon Lunapark — Festival Modu: dönme dolap, karusel, neon kemer ve ışıklı coaster rayı" width="900">
+  <img src="https://github.com/user-attachments/assets/d972e640-f52b-41cc-b513-d1ac4eae463d" alt="Neon Lunapark in Festival mode: the ferris wheel, the carousel, the neon arch and the lit coaster track" width="900">
 </p>
 
 <h1 align="center">Neon Lunapark</h1>
 
 <p align="center">
-  Bir HTML dosyasını çift tıklayın; gece ışıklarıyla yanan minyatür bir lunapark açılır.<br>
-  Kurulum yok, sunucu yok, indirilen tek bir görsel veya model dosyası yok.
+  Double click one HTML file and a miniature funfair lights up for the night.<br>
+  No install, no server, not a single downloaded image or model file.
 </p>
 
 <p align="center">
-  <a href="https://umutseve4.github.io/neon-lunapark-webgl/"><b>▶ Canlı demoyu aç</b></a>
-  &nbsp;·&nbsp; hiçbir şey indirmeden, doğrudan tarayıcıda
+  <a href="https://umutseve4.github.io/neon-lunapark-webgl/"><b>Open the live demo</b></a>
+  &nbsp;.&nbsp; straight in the browser, nothing to download
 </p>
 
 <p align="center">
-  <a href="index.html"><img src="https://img.shields.io/badge/index.html-63%20KB-FF4D4F?style=flat-square" alt="Tek dosya, 63 KB"></a>
-  <img src="https://img.shields.io/badge/ba%C4%9F%C4%B1ml%C4%B1l%C4%B1k-0-FF4D4F?style=flat-square" alt="Sıfır bağımlılık">
-  <img src="https://img.shields.io/badge/60-FPS-FF4D4F?style=flat-square" alt="60 FPS ölçüldü">
+  <a href="index.html"><img src="https://img.shields.io/badge/index.html-64%2C472%20bytes-FF4D4F?style=flat-square" alt="One file, 64,472 bytes"></a>
+  <img src="https://img.shields.io/badge/build%20dependencies-0-FF4D4F?style=flat-square" alt="Zero build dependencies">
+  <img src="https://img.shields.io/badge/asset%20files-0-FF4D4F?style=flat-square" alt="Zero asset files">
+  <a href="https://github.com/umutseve4/neon-lunapark-webgl/actions/workflows/verify.yml"><img src="https://github.com/umutseve4/neon-lunapark-webgl/actions/workflows/verify.yml/badge.svg" alt="verify"></a>
 </p>
 
 ---
 
-## 30 saniyede ne oluyor?
+## What happens in the first 30 seconds
 
-Kapalı bir ray üzerinde dört vagonluk bir tren koşuyor, virajlarda içeri yatıyor. Dönme dolap ağır ağır dönüyor, kabinleri yerçekimine asılı kalıyor. Karuselin atları süzülerek inip kalkıyor. Bilet gişesi, oyun standı ve yiyecek standı tabelalarını yakıyor. Kamera sahnenin çevresinde kendi kendine süzülüyor — siz de fareyle araya girebiliyorsunuz.
+A four car train runs a closed loop of track and leans into the bends. The ferris wheel turns slowly, its cabins hanging plumb the whole way round. The carousel horses glide up and down. The ticket booth, the game stand and the food stand light their signs. The camera drifts around the scene on its own, and you can take it over with the mouse whenever you want.
 
-Üç düğme atmosferi baştan kuruyor:
+Three buttons rebuild the atmosphere from scratch:
 
-| Mod | Ne değişir |
+| Mode | What changes |
 |---|---|
-| **Gündüz** | Açık mavi gökyüzü, sıcak güneş, keskin gölgeler; neon söner |
-| **Normal Gece** | Lacivert gökyüzü, yıldızlar, ay ışığı, ölçülü parıltı |
-| **Festival** | Mor-macenta gökyüzü, doygun renk, güçlü bloom, hızlanmış ışık |
+| **Day** | Pale blue sky, warm sun, hard shadows, the neon goes out |
+| **Night** | Deep blue sky, stars, moonlight, restrained glow |
+| **Festival** | Purple and magenta sky, saturated colour, strong bloom, quickened light |
 
-Yukarıdaki kare Festival Modu. Geçişler ani değil: gökyüzü, sis, ışık renkleri ve bloom değerleri birbirine yumuşayarak karışır.
+The frame above is Festival mode. The transitions are not cuts. The sky, the fog, the light colours and the bloom values all soften into each other.
 
-## Nasıl açarım?
+## How to open it
 
-En hızlısı: [**canlı sürümü tarayıcıda açın**](https://umutseve4.github.io/neon-lunapark-webgl/) — indirme yok.
+Fastest route: [**open the live version in the browser**](https://umutseve4.github.io/neon-lunapark-webgl/). Nothing to download.
 
-Yerelde çalıştırmak isterseniz:
+If you would rather run it locally:
 
 ```
-1. index.html dosyasını indirin
-2. Çift tıklayın
+1. download index.html
+2. double click it
 ```
 
-Üçüncü adım yok. Derleme, `npm install`, yerel sunucu gerekmez. Dosya `file://` üzerinden çalışır.
+There is no third step. No build, no `npm install`, no local server. The file works over `file://`.
 
-## Kontroller
+## Controls
 
-| Girdi | Etki |
+| Input | What it does |
 |---|---|
-| Sürükle | Sahneyi döndür |
-| Tekerlek | Yaklaş / uzaklaş |
-| `1` `2` `3` | Gündüz / Normal Gece / Festival |
-| `Boşluk` | Otomatik kamera turunu durdur–devam ettir |
-| `←` `→` | Kamerayı elle çevir |
-| `+` `−` | Zoom |
+| Drag | Rotate the scene |
+| Wheel | Zoom in and out |
+| `1` `2` `3` | Day / Night / Festival |
+| `Space` | Pause and resume the automatic camera tour |
+| `Left` `Right` | Turn the camera by hand |
+| `+` `-` | Zoom |
 
-Fareyi bıraktıktan birkaç saniye sonra otomatik tur kendiliğinden devralır.
+A few seconds after you let go of the mouse, the automatic tour takes over again by itself.
 
-## Ölçülen performans
+## What was actually measured
 
-Yukarıdaki karenin alındığı oturum — Chrome, masaüstü, `file://` protokolü, Festival Modu:
+The session the frame above came from. Chrome, desktop, `file://` protocol, Festival mode:
 
-| Ölçüm | Değer |
+| Measurement | Value |
 |---|---|
-| Kare hızı | 60 FPS |
-| Sahne karmaşıklığı | 84.774 üçgen |
-| Dosya boyutu | 64.472 bayt |
-| Ağ isteği (Three.js dışında) | 0 |
+| Frame rate | 60 FPS |
+| Scene complexity | 84,774 triangles |
+| File size | 64,472 bytes |
+| Network requests other than Three.js | 0 |
 
-## Nasıl yapıldı?
+Those are numbers from one machine on one day, not a promise about yours. There used to be a `60 FPS` badge at the top of this file and it is gone on purpose. A badge reads as a standing guarantee, and a frame rate cannot be re-measured by CI on every commit. The file size can be, so that is the one number still carried as a badge. `verify.mjs` reads the digits back out of the badge URL and compares them against the real byte count, which means the badge cannot drift away from the file.
 
-**Sıfır varlık.** Depoda tek bir `.glb`, `.png` veya `.jpg` yok. Her gövde kutu, silindir, tor, küre ve `TubeGeometry`'den; her doku çalışma anında bir `<canvas>` üzerine çizilip `CanvasTexture`'a dönüştürülüyor. Tabeladaki yazılar dahil.
+## How it is built
 
-**Ray bir eğri.** Yol `CatmullRomCurve3` ile kapalı bir eğri olarak tanımlı; trenin konumu ve viraj yatışı her karede eğrinin teğet–normal çerçevesinden türetiliyor, elle animasyon yok.
+**Zero assets.** There is not one `.glb`, `.png` or `.jpg` in the repository. Every body comes from a box, a cylinder, a torus, a sphere or a `TubeGeometry`. Every texture is drawn onto a `<canvas>` at run time and turned into a `CanvasTexture`, including the lettering on the signs.
 
-**Gökyüzü bir shader.** İçten görünen bir küre üzerinde `ShaderMaterial` gradyanı (`fog: false`, `renderOrder: -1`). Son işlem `EffectComposer` + `UnrealBloomPass` + ACES filmic ton eşleme.
+**The track is a curve.** The route is defined as a closed `CatmullRomCurve3`. The train position and its lean into the bends are derived every frame from the tangent and normal frame of that curve. Nothing is animated by hand.
 
-**Kendini koruyor.** Cihaz gücüne göre kalite kademesi, `devicePixelRatio` sınırı, gölge ve bloom çözünürlüğü kısıntısı, kare hızı düşerse otomatik kalite indirimi, point light bütçesi 4. `webglcontextlost` yakalanıp bağlam geri kuruluyor.
+**The sky is a shader.** A `ShaderMaterial` gradient on an inward facing sphere, with `fog: false` and `renderOrder: -1`. Post processing is `EffectComposer` plus `UnrealBloomPass` plus ACES filmic tone mapping.
 
-**Klavyeyle çalışıyor.** Tüm kontroller tuşla erişilebilir, düğmeler 44 px dokunma hedefinde, mod değişimi `aria-live` ile duyuruluyor, `prefers-reduced-motion` saygı görüyor.
+**It defends itself.** A quality tier chosen from device power, a `devicePixelRatio` cap, reduced shadow and bloom resolution, an automatic quality downgrade when the frame rate drops, and a point light budget of 4. `webglcontextlost` is caught and the context is rebuilt.
 
-Bağımlılık: Three.js 0.169.0, ES modül `importmap` ile CDN'den. Bundler, paket yöneticisi, derleme adımı yok.
+**It works from the keyboard.** Every control is reachable by key, the buttons sit on a 44 px touch target, a mode change is announced through `aria-live`, and `prefers-reduced-motion` is respected.
 
-## Sınırlar
+Dependency: Three.js 0.169.0, loaded from a CDN through an ES module `importmap`. No bundler, no package manager, no build step.
 
-- Three.js CDN'den geldiği için ilk açılışta internet gerekir; sonrası tarayıcı önbelleğinden.
-- WebGL desteği zorunlu; çok eski cihazlarda kalite kademesi düşer.
-- Mobilde test edilmedi — kalite kademesi mobili hedefliyor ama ölçüm yapılmadı.
+## What CI checks
 
-## Buradan nereye
+`verify.mjs` runs on every push and every pull request. It asserts that
 
-1. **Kalabalık** — standlar arasında yürüyen, kuyruğa girip trene binen yaya figürleri.
-2. **Prosedürel ses** — Web Audio osilatörleriyle ray takırtısı, karusel melodisi, doppler'lı tren geçişi. Ses dosyası yok, sıfır-varlık kuralı bozulmuyor.
-3. **Vagondan bakış** — kamerayı öndeki vagona kenetleyip ray boyunca birinci şahıs sürüş; aynı eğri verisinden ikinci bir deneyim.
+- `index.html` exists and stays under the 96 KB ceiling,
+- the byte count in the badge equals the real byte count,
+- the repository holds no image, model or audio file,
+- the page references no external image or stylesheet and nothing over plain `http://`,
+- the Three.js version is pinned to `three@0.169.0` and arrives through an `importmap`,
+- the things this README names in code are really in the file: `CanvasTexture`, `CatmullRomCurve3`, `ShaderMaterial`, `UnrealBloomPass`, `EffectComposer`, the `webglcontextlost` handler, `aria-live` and `prefers-reduced-motion`,
+- no badge in this README publishes a frame rate.
+
+The workflow then requests the live address and fails if it does not return HTTP 200, for as long as this README links to it.
+
+## Limits
+
+- Three.js comes from a CDN, so the first open needs a connection. After that it is served from the browser cache.
+- WebGL is required. On much older devices the quality tier drops.
+- Not tested on mobile. The quality tier targets mobile, but no measurement was taken there.
+- No sound.
+- The 84,774 triangle count and the 60 FPS figure come from a single session and are not re-measured by CI.
+
+## Where this goes next
+
+1. **A crowd.** Pedestrian figures walking between the stands, queueing, boarding the train.
+2. **Procedural sound.** Track clatter, a carousel melody and a doppler shifted train pass built from Web Audio oscillators. No audio file, so the zero asset rule survives.
+3. **A ride along camera.** Clamp the camera to the front car for a first person run of the track, a second experience out of the same curve data.
 
 ---
 
-MIT — bkz. [LICENSE](LICENSE). &nbsp;·&nbsp; Made by **Opus 5**.
+MIT, see [LICENSE](LICENSE). &nbsp;.&nbsp; Made by **Opus 5**.

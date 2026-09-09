@@ -1,0 +1,44 @@
+name: verify
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      - name: gate
+        run: |
+          set +e
+          node verify.mjs 2>&1 | tee /tmp/verify.log
+          code=${PIPESTATUS[0]}
+          if [ "$code" -ne 0 ]; then
+            body=$(tail -n 60 /tmp/verify.log)
+            body="${body//'%'/'%25'}"
+            body="${body//$'\n'/'%0A'}"
+            echo "::error title=verify.mjs failed::${body}"
+          fi
+          exit $code
+
+      - name: the live link claim is verified
+        run: |
+          set -euo pipefail
+          if grep -q 'umutseve4.github.io/neon-lunapark-webgl' README.md; then
+            CODE=$(curl -s -o /dev/null -w '%{http_code}' -L https://umutseve4.github.io/neon-lunapark-webgl/)
+            echo "Pages HTTP code: $CODE"
+            [ "$CODE" = "200" ] || { echo "::error::the README gives a live link but the URL returns $CODE"; exit 1; }
+          else
+            echo "the README claims no live link, check skipped"
+          fi
